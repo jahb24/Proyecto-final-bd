@@ -24,7 +24,7 @@ def obtener_bd():
     return cliente[base_de_datos]
 
 ## CREATE
-def insertar(data,collection):
+def insertar(data):
     base_de_datos = obtener_bd()
     if type(data).__name__ == "Employee":
         employees = base_de_datos.employees
@@ -50,7 +50,7 @@ def obtener(collection):
     base_de_datos = obtener_bd()
     return base_de_datos[collection].find().sort("_id")
 
-def obtenerUno(collection,id):
+def obtenerUno(collection, id):
     base_de_datos = obtener_bd()
     if(collection == "employees"): return base_de_datos[collection].find({"empno":id})
     else: return base_de_datos[collection].find({"deptno":id})
@@ -60,13 +60,13 @@ def actualizar(id, data):
     try:
         base_de_datos = obtener_bd()
         if type(data).__name__ == "Employee":
-            resultado = base_de_datos.employees.update_one(
+            resultado = base_de_datos["employees"].update_one(
                 {
-                '_id': ObjectId(id)
+                    "empno": id
+                    #'_id': ObjectId(id)
                 }, 
                 {
                     '$set': {
-                        "empno": data.numEmp,
                         "ename": data.nombre,
                         "job": data.puesto,
                         "sal": data.salario,
@@ -79,11 +79,11 @@ def actualizar(id, data):
         else:
             resultado = base_de_datos["departments"].update_one(
                 {
-                '_id': ObjectId(id)
+                    "deptno": id
+                    #'_id': ObjectId(id)
                 }, 
                 {
                     '$set': {
-                        "deptno": data.nombre,
                         "dname": data.nombre,
                         "loc": data.ciudad
                     }
@@ -93,26 +93,34 @@ def actualizar(id, data):
         print(
             """\n
             -----------------------------------
-            Error: el ID ingresado es invalido.
+            Error: el Número ingresado es invalido.
             -----------------------------------
             \n""")
         return 0
 
 
 ## DELETE
-def eliminar(collection,id):
+def eliminar(collection, id):
     base_de_datos = obtener_bd()
     try:
-        resultado = base_de_datos[collection].delete_one(
-            {
-            '_id': ObjectId(id)
-            })
+        if collection == "employees":
+            resultado = base_de_datos[collection].delete_one(
+                {
+                    "empno": id
+                    #'_id': ObjectId(id)
+                })
+        else:
+            resultado = base_de_datos[collection].delete_one(
+                {
+                    "deptno": id
+                    #'_id': ObjectId(id)
+                })
         return resultado.deleted_count
     except errors.InvalidId:
         print(
             """\n
             -----------------------------------
-            Error: el ID ingresado es invalido.
+            Error: el Número ingresado es invalido.
             -----------------------------------
             \n""")
         return 0
@@ -176,12 +184,12 @@ while eleccion != 11:
         nomDep = input("Nombre del departamento: ")
         ciudad = input("Ciudad del departamento: ")
         department = Department(departamento, nomDep, ciudad)
-        id = insertar(department)
-        print("El id del empleado insertado es: ", id)
+        print(f"El id del departamento insertado es: {insertar(department)}")
+        pause()
     elif eleccion == 3:
         clear()
         id = int(input("Número del empleado: "))
-        for employee in obtenerUno("employees",id):
+        for employee in obtenerUno("employees", id):
             print()
             print("ID: ", employee["_id"])
             print("Número: ", int(employee["empno"]))
@@ -191,13 +199,13 @@ while eleccion != 11:
             else: print("Manager: ", int(employee["mgr"]))
             print("Salario: ", employee["sal"])
             print("Comision: ", employee["comm"])
-            if(employee["mgr"] == "null"): print("Departamento: ", employee["mgr"])
-            else: print("Departamento: ", int(employee["mgr"]))
+            if employee["deptno"] == "null": print("Departamento: ", employee["deptno"])
+            else: print("Departamento: ", int(employee["deptno"]))
         pause()
     elif eleccion == 4:
         clear()
         id = int(input("Número del departamento: "))
-        for department in obtenerUno("departments",id):
+        for department in obtenerUno("departments", id):
             print()
             print("ID: ", department["_id"])
             print("Número: ", int(department["deptno"]))
@@ -239,8 +247,8 @@ while eleccion != 11:
     elif eleccion == 7:
         clear()
         print("\tActualizar empleado\n")
-        id = input("Dime el ID del empleado: ")
-        numero = int(input("Nuevo Número del empleado: "))
+        #id = input("Dime el ID del empleado: ")
+        numero = int(input("Dime el Número del empleado: "))
         nombre = input("Nuevo Nombre del empleado: ")
         puesto = input("Nuevo Puesto del empleado: ")
         jefe = int(input("Nuevo Número del manager: "))
@@ -248,32 +256,34 @@ while eleccion != 11:
         comision = int(input("Nueva Comision: "))
         departamento = int(input("Nuevo Numero de departamento en el que trabaja: "))
         employee = Employee(numero, nombre, puesto, jefe, salario, comision, departamento)
-        empleados_actualizados = actualizar(id, employee)
+        empleados_actualizados = actualizar(numero, employee)
         print("Número de empleados actualizados: ", empleados_actualizados)
         pause()
     elif eleccion == 8:
         clear()
         print("\tActualizar departamento\n")
-        id = input("Dime el ID del departamento: ")
-        departamento = int(input("Nuevo Número de departamento: "))
+        #id = input("Dime el ID del departamento: ")
+        departamento = int(input("Dime el Número de departamento: "))
         nomDep = input("Nuevo Nombre del departamento: ")
         ciudad = input("Nueva Ciudad del departamento: ")
         department = Department(departamento, nomDep, ciudad)
-        dept_actualizados = actualizar(id, department)
+        dept_actualizados = actualizar(departamento, department)
         print("Número de departamentos actualizados: ", dept_actualizados)
         pause()
     elif eleccion == 9:
         clear()
         print("\tEliminar\n")
-        id = input("Dime el ID del empleado: ")
-        empleados_eliminados = eliminar("employees",id)
+        #id = input("Dime el ID del empleado: ")
+        numero = int(input("Dime el Número del empleado: "))
+        empleados_eliminados = eliminar("employees", numero)
         print("Número de empleados eliminados: ", empleados_eliminados)
         pause()
     elif eleccion == 10:
         clear()
         print("\tEliminar\n")
-        id = input("Dime el ID del departamento: ")
-        empleados_eliminados = eliminar("departments",id)
-        print("Número de departamentos eliminados: ", empleados_eliminados)
+        #id = input("Dime el ID del departamento: ")
+        departamento = int(input("Dime el Número de departamento: "))
+        departamentos_eliminados = eliminar("departments", departamento)
+        print("Número de departamentos eliminados: ", departamentos_eliminados)
         pause()
 clear()
